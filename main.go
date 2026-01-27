@@ -94,13 +94,16 @@ func main() {
 		}
 	})
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"message": "Api running",
-			"status":  "ok",
-		})
-	})
+	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	json.NewEncoder(w).Encode(map[string]string{
+	// 		"message": "Api running",
+	// 		"status":  "ok",
+	// 	})
+	// })
+
+	http.Handle("/", http.FileServer(http.Dir("./static")))
+
 	fmt.Println("Server is running on port 8080")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
