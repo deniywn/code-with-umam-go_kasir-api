@@ -51,12 +51,20 @@ func main() {
 	transactionService := services.NewTransactionService(transactionRepo)
 	transactionHandler := handlers.NewTransactionHandler(transactionService)
 
+	// Report
+	reportRepo := repositories.NewReportRepository(db)
+	reportService := services.NewReportService(reportRepo)
+	reportHandler := handlers.NewReportHandler(reportService)
 	// Setup routes
+
 	//**product**
 	http.HandleFunc("/api/produk", productHandler.HandleProducts)
 	http.HandleFunc("/api/produk/", productHandler.HandleProductByID)
 	//**transaction**
 	http.HandleFunc("/api/checkout", transactionHandler.HandleCheckout) // POST
+	//**report
+	http.HandleFunc("/api/report/hari-ini", reportHandler.GetTodaySalesSummary)
+	http.HandleFunc("/api/report", reportHandler.GetSalesSummary)
 
 	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

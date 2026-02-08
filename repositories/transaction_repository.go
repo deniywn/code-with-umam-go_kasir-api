@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	models "kasir-api/model"
+	"strings"
 )
 
 type TransactionRepository struct {
@@ -69,12 +70,36 @@ func (repo *TransactionRepository) CreateTransaction(items []models.CheckoutItem
 	}
 
 	// Insert transactionDetails.
-	for i, detail := range details {
-		details[i].TransactionID = transactionID
-		_, err := tx.Exec("INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES ($1, $2, $3, $4)", transactionID, detail.ProductID, detail.Quantity, detail.Subtotal)
-		if err != nil {
-			return nil, err
-		}
+	if len(details) == 0 {
+		return nil, nil // Atau handle sesuai logika bisnis jika tidak ada detail
+	}
+
+	valueStrings := make([]string, 0, len(details))
+	valueArgs := make([]interface{}, 0, len(details)*4)
+	i := 1 // Counter untuk placeholder $1, $2, dst.
+
+	for _, d := range details {
+		valueStrings = append(
+			valueStrings,
+			fmt.Sprintf("($%d, $%d, $%d, $%d)", i, i+1, i+2, i+3),
+		)
+
+		valueArgs = append(valueArgs, transactionID)
+		valueArgs = append(valueArgs, d.ProductID)
+		valueArgs = append(valueArgs, d.Quantity)
+		valueArgs = append(valueArgs, d.Subtotal)
+
+		i += 4
+	}
+
+	stmt := fmt.Sprintf(
+		"INSERT INTO transaction_details (transaction_id, product_id, quantity, subtotal) VALUES %s",
+		strings.Join(valueStrings, ","),
+	)
+
+	_, err = tx.Exec(stmt, valueArgs...)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := tx.Commit(); err != nil {
